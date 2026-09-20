@@ -31,6 +31,10 @@ import {
 } from '../services/capabilities';
 import { useSession } from '../session/SessionProvider';
 import { createSetupModel, setMode, type SetupModel } from './model';
+import {
+  clearPairingFragment,
+  consumePairingFragment,
+} from './pairingBootstrap';
 import { validateSetup } from './validation';
 
 const palette = colors.light;
@@ -42,7 +46,12 @@ export function SetupScreen() {
   const wide = width >= 960;
   const compact = width < 600;
   const narrow = width < 360;
-  const [model, setModel] = useState(createSetupModel);
+  const [pairingBootstrap] = useState(consumePairingFragment);
+  const [showConnectionSettings, setShowConnectionSettings] = useState(!pairingBootstrap);
+  const [model, setModel] = useState(() => ({
+    ...createSetupModel(),
+    pairingToken: pairingBootstrap ?? '',
+  }));
   const [capabilities, setCapabilities] = useState<CapabilitiesResponse | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,6 +93,12 @@ export function SetupScreen() {
     void refresh();
     return () => { discoveryGeneration.current += 1; };
   }, []);
+
+  useEffect(() => {
+    if (!pairingBootstrap) return undefined;
+    const cleanup = setTimeout(clearPairingFragment, 0);
+    return () => clearTimeout(cleanup);
+  }, [pairingBootstrap]);
 
   const errors = useMemo(
     () => validateSetup(model, capabilities),
@@ -215,29 +230,59 @@ export function SetupScreen() {
 
               <View style={styles.section}>
                 <SectionHeading number="01" title="Connect locally" />
-                <Text style={styles.label}>Backend address</Text>
-                <TextInput
-                  accessibilityLabel="Backend address"
-                  accessibilityHint="Address of the local language coach backend"
-                  testID="backend-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={styles.input}
-                  value={model.backendBaseUrl}
-                  onChangeText={(value) => update('backendBaseUrl', value)}
-                />
-                <Text style={styles.label}>Temporary pairing token</Text>
-                <TextInput
-                  accessibilityLabel="Temporary pairing token"
-                  accessibilityHint="Token printed by the backend when it starts"
-                  testID="pairing-token"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  secureTextEntry
-                  style={styles.input}
-                  value={model.pairingToken}
-                  onChangeText={(value) => update('pairingToken', value)}
-                />
+                {pairingBootstrap && !showConnectionSettings ? (
+                  <View style={[
+                    styles.importedConnection,
+                    compact && styles.importedConnectionCompact,
+                  ]}>
+                    <View style={styles.importedCheck}>
+                      <Text style={styles.importedCheckmark}>✓</Text>
+                    </View>
+                    <View style={styles.importedCopy}>
+                      <Text style={styles.importedTitle}>Secure connection details added</Text>
+                      <Text style={styles.importedHint}>
+                        The temporary token came from the backend link and was removed from the address bar.
+                      </Text>
+                    </View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Show connection settings"
+                      style={({ pressed }) => [
+                        styles.settingsButton,
+                        compact && styles.settingsButtonCompact,
+                        pressed && styles.buttonPressed,
+                      ]}
+                      onPress={() => setShowConnectionSettings(true)}>
+                      <Text style={styles.settingsButtonText}>Settings</Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <>
+                    <Text style={styles.label}>Backend address</Text>
+                    <TextInput
+                      accessibilityLabel="Backend address"
+                      accessibilityHint="Address of the local language coach backend"
+                      testID="backend-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      style={styles.input}
+                      value={model.backendBaseUrl}
+                      onChangeText={(value) => update('backendBaseUrl', value)}
+                    />
+                    <Text style={styles.label}>Temporary pairing token</Text>
+                    <TextInput
+                      accessibilityLabel="Temporary pairing token"
+                      accessibilityHint="Token printed by the backend when it starts"
+                      testID="pairing-token"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      secureTextEntry
+                      style={styles.input}
+                      value={model.pairingToken}
+                      onChangeText={(value) => update('pairingToken', value)}
+                    />
+                  </>
+                )}
                 <View
                   accessibilityLiveRegion="polite"
                   style={[
@@ -642,6 +687,39 @@ const styles = StyleSheet.create({
     fontFamily: typography.body.fontFamily,
     fontSize: 15,
   },
+  importedConnection: {
+    minHeight: 76,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radii.md,
+    backgroundColor: palette.accentSoft,
+    borderWidth: 1,
+    borderColor: '#C5DDD4',
+  },
+  importedConnectionCompact: { flexWrap: 'wrap' },
+  importedCheck: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 15,
+    backgroundColor: palette.accent,
+  },
+  importedCheckmark: { color: palette.onAccent, fontWeight: '700' },
+  importedCopy: { flex: 1, gap: spacing.xs },
+  importedTitle: { ...typography.label, color: palette.text },
+  importedHint: { ...typography.caption, color: palette.textMuted },
+  settingsButton: {
+    minHeight: 36,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.full,
+    backgroundColor: palette.surface,
+  },
+  settingsButtonCompact: { width: '100%', alignItems: 'center' },
+  settingsButtonText: { ...typography.caption, color: palette.accent, fontWeight: '600' },
   connectionState: {
     minHeight: 48,
     flexDirection: 'row',

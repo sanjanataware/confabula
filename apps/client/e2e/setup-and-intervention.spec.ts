@@ -177,6 +177,23 @@ test('preview, final help, device speech, echo protection, barge-in, replay, and
   expect(pageErrors).toEqual([]);
 });
 
+test('one-click backend link imports and removes pairing before startup', async ({ page, request }) => {
+  await auditMicrophone(page);
+  await page.goto(`/#pair=${pairingToken}`);
+  await expect(page.getByText('Meta and local speech are ready.')).toBeVisible();
+  await expect(page.getByText('Secure connection details added')).toBeVisible();
+  await expect(page.getByTestId('pairing-token')).toHaveCount(0);
+  await expect.poll(() => new URL(page.url()).hash).toBe('');
+  await page.getByTestId('learner-1-language').selectOption('en');
+  await page.getByTestId('learning-language').selectOption('es');
+  await page.getByTestId('processing-disclosure').click();
+  await page.getByTestId('start-conversation').click();
+  await expect(page).toHaveURL(/\/conversation$/);
+  await expect(page.getByText('Listening for useful moments')).toBeVisible();
+  await page.getByRole('button', { name: 'End', exact: true }).click();
+  await expect.poll(async () => (await state(request)).sessions).toBe(0);
+});
+
 test('setup remains responsive and keyboard ordered across viewports', async ({ page }) => {
   for (const viewport of [
     { width: 1440, height: 1000 },

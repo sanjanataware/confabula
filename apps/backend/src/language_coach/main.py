@@ -28,7 +28,9 @@ def create_app(dependencies: AppDependencies | None = None) -> FastAPI:
             print(
                 "Conversation Language Coach ready\n"
                 f"Backend: {configured.settings.backend_public_base_url}\n"
-                f"Pairing token: {configured.pairing_token.value}"
+                f"Pairing token: {configured.pairing_token.value}\n"
+                f"Open coach: {configured.settings.client_public_base_url}/"
+                f"#pair={configured.pairing_token.value}"
             )
         try:
             yield

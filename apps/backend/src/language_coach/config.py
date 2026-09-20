@@ -31,6 +31,7 @@ class Settings(BaseSettings):
         "http://localhost:8081", "https://localhost:8443",
     ])
     backend_public_base_url: str = "https://localhost:8444"
+    client_public_base_url: str = "https://localhost:8443"
     allow_insecure_loopback_debug: bool = False
 
     @field_validator("muse_api_key", mode="before")
@@ -45,10 +46,12 @@ class Settings(BaseSettings):
         for origin in self.allowed_origins:
             validate_origin(origin)
         validate_origin(self.backend_public_base_url)
+        validate_origin(self.client_public_base_url)
         if urlsplit(self.backend_public_base_url).scheme == "http" and not self.allow_insecure_loopback_debug:
             raise ValueError("backend public base URL must use HTTPS")
         self.allowed_origins = [origin.rstrip("/") for origin in self.allowed_origins]
         self.backend_public_base_url = self.backend_public_base_url.rstrip("/")
+        self.client_public_base_url = self.client_public_base_url.rstrip("/")
         return self
 
     @property

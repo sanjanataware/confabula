@@ -22,7 +22,7 @@ Prerequisites are Python 3.12, `uv`, Node.js, npm, `espeak-ng`, `mkcert`, Chrome
 6. Run `make e2e` for the deterministic browser path.
 7. Run `make provider-smoke` only when intentionally exercising live Meta providers.
 
-The backend prints a new pairing token on each run. A session can resume for 15 seconds without remapping speakers and ends automatically at 50 minutes. The conversation view never renders a full transcript. The first backend start loads Kokoro before reporting ready; with a cached model this takes about six seconds on Apple Silicon, and warm Spanish synthesis takes roughly 0.4–1.5 seconds. Device fallback voice availability and quality vary by browser/OS.
+The backend prints a one-click `Open coach` link on each run. Its temporary pairing token stays in the URL fragment, is imported by the PWA, and is immediately removed from the address bar; manual connection settings remain available for recovery. A session can resume for 15 seconds without remapping speakers and ends automatically at 50 minutes. The conversation view never renders a full transcript. The first backend start loads Kokoro before reporting ready; with a cached model this takes about six seconds on Apple Silicon, and warm Spanish synthesis takes roughly 0.4–1.5 seconds. Device fallback voice availability and quality vary by browser/OS.
 
 See the [implementation plan](2026-09-19-conversation-language-coach-mvp.md), [provider smoke guide](docs/testing/provider-smoke-tests.md), and [S26 acceptance checklist](docs/testing/s26-acceptance-checklist.md).
 

@@ -19,6 +19,19 @@ def test_https_public_origin_is_preserved() -> None:
     assert settings.backend_public_base_url == "https://localhost:8444"
 
 
+def test_client_origin_is_validated_and_normalized_for_pairing_links() -> None:
+    settings = Settings(
+        _env_file=None,
+        **values(client_public_base_url="http://127.0.0.1:8764/"),
+    )
+    assert settings.client_public_base_url == "http://127.0.0.1:8764"
+    with pytest.raises(ValidationError):
+        Settings(
+            _env_file=None,
+            **values(client_public_base_url="http://192.168.1.3:8764"),
+        )
+
+
 def test_loopback_http_requires_explicit_debug_flag() -> None:
     with pytest.raises(ValidationError):
         Settings(

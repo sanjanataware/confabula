@@ -3,6 +3,7 @@ import { getLocales } from 'expo-localization';
 
 import { discoverBackend } from '../../src/services/capabilities';
 import { SetupScreen } from '../../src/setup/SetupScreen';
+import { consumePairingFragment } from '../../src/setup/pairingBootstrap';
 
 jest.mock('@react-native-picker/picker', () => {
   const React = jest.requireActual('react');
@@ -17,6 +18,10 @@ jest.mock('expo-router', () => ({ useRouter: () => mockRouter }));
 jest.mock('expo-localization', () => ({ getLocales: jest.fn(() => [{ languageCode: 'en' }]) }));
 jest.mock('../../src/services/capabilities', () => ({
   ...jest.requireActual('../../src/services/capabilities'), discoverBackend: jest.fn(),
+}));
+jest.mock('../../src/setup/pairingBootstrap', () => ({
+  clearPairingFragment: jest.fn(),
+  consumePairingFragment: jest.fn(),
 }));
 jest.mock('../../src/session/SessionProvider', () => ({
   useSession: () => ({ startConversation: mockStart, starting: false, error: null }),
@@ -35,6 +40,7 @@ const discovery = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.mocked(consumePairingFragment).mockReturnValue(null);
   jest.mocked(discoverBackend).mockResolvedValue(discovery);
   jest.mocked(getLocales).mockReturnValue([{ languageCode: 'en' }] as unknown as ReturnType<typeof getLocales>);
 });
@@ -52,6 +58,19 @@ test('backend languages and a supported locale populate the form; disclosure gat
   await fireEvent.press(screen.getByRole('button', { name: 'Start conversation' }));
   await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/conversation'));
   expect(mockStart).toHaveBeenCalledTimes(1);
+});
+
+test('a backend link imports and clears its temporary pairing credential', async () => {
+  const pairingToken = 'p'.repeat(43);
+  jest.mocked(consumePairingFragment).mockReturnValue(pairingToken);
+  await render(<SetupScreen />);
+  await screen.findByText('Meta and local speech are ready.');
+  expect(screen.getByText('Secure connection details added')).toBeTruthy();
+  expect(screen.queryByTestId('pairing-token')).toBeNull();
+  await fireEvent(screen.getByTestId('learning-language'), 'valueChange', 'es');
+  await fireEvent.press(screen.getByTestId('processing-disclosure'));
+  await fireEvent.press(screen.getByRole('button', { name: 'Start conversation' }));
+  expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ pairingToken }));
 });
 
 test('same language is shown inline even though the disabled start button cannot be pressed', async () => {

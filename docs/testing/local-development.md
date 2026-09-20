@@ -20,9 +20,9 @@ The application state is local and ephemeral, but processing is not offline: mic
 1. Install `espeak-ng` (`brew install espeak-ng` on macOS or `apt install espeak-ng` on Debian/Ubuntu).
 2. Run `make speech-setup` once. This downloads roughly 625 MB of Apache-2.0 Kokoro weights into the user cache, outside the repository.
 3. Run `make dev-cert` once and approve the local trust prompt.
-4. Run `make backend-dev` in one terminal. The cached Kokoro model warms before the pairing banner appears; copy the printed token.
+4. Run `make backend-dev` in one terminal. The cached Kokoro model warms before the pairing banner appears; keep the printed `Open coach` link.
 5. Run `make client-web` in another terminal.
-6. Open `https://localhost:8443`, enter the backend address `https://localhost:8444` and pairing token, then grant microphone permission.
+6. Open the printed link. The PWA imports its fragment-only temporary token, clears it from the address bar, and leaves manual connection settings available if recovery is needed. Then choose languages and grant microphone permission.
 
 If microphone permission was denied, use the browser site controls to restore it and reload. `not_ready` health means the Meta key is missing; key values are never returned. For languages outside Kokoro coverage, fallback voice availability is determined by the browser or Android speech engine.
 
