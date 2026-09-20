@@ -1,0 +1,10 @@
+{
+  "interventions": [
+    {
+      "source_text": "grocery store",
+      "source_language": "English",
+      "target_text": "supermercado",
+      "target_language": "Spanish"
+    }
+  ]
+}

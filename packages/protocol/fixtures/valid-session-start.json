@@ -1,0 +1,11 @@
+{
+  "type": "session.start",
+  "protocol_version": 1,
+  "pairing_token": "ppppppppppppppppppppppppppppppppppppppppppp",
+  "config": {
+    "mode": "learner_fluent",
+    "learning_language": "es",
+    "learner1_native_language": "en",
+    "learner2_native_language": null
+  }
+}

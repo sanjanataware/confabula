@@ -1,0 +1,366 @@
+{
+  "$defs": {
+    "AudioStart": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "type": {
+          "const": "audio.start",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version"
+      ],
+      "title": "AudioStart",
+      "type": "object"
+    },
+    "AudioStop": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "type": {
+          "const": "audio.stop",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version"
+      ],
+      "title": "AudioStop",
+      "type": "object"
+    },
+    "InterventionAudioRetry": {
+      "additionalProperties": false,
+      "properties": {
+        "intervention_id": {
+          "format": "uuid",
+          "title": "Intervention Id",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "type": {
+          "const": "intervention.audio_retry",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version",
+        "intervention_id"
+      ],
+      "title": "InterventionAudioRetry",
+      "type": "object"
+    },
+    "PlaybackEnded": {
+      "additionalProperties": false,
+      "properties": {
+        "intervention_id": {
+          "format": "uuid",
+          "title": "Intervention Id",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "type": {
+          "const": "playback.ended",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version",
+        "intervention_id"
+      ],
+      "title": "PlaybackEnded",
+      "type": "object"
+    },
+    "PlaybackInterrupted": {
+      "additionalProperties": false,
+      "properties": {
+        "intervention_id": {
+          "format": "uuid",
+          "title": "Intervention Id",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "type": {
+          "const": "playback.interrupted",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version",
+        "intervention_id"
+      ],
+      "title": "PlaybackInterrupted",
+      "type": "object"
+    },
+    "PlaybackStarted": {
+      "additionalProperties": false,
+      "properties": {
+        "intervention_id": {
+          "format": "uuid",
+          "title": "Intervention Id",
+          "type": "string"
+        },
+        "manual": {
+          "default": false,
+          "title": "Manual",
+          "type": "boolean"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "type": {
+          "const": "playback.started",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version",
+        "intervention_id"
+      ],
+      "title": "PlaybackStarted",
+      "type": "object"
+    },
+    "SessionConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "learner1_native_language": {
+          "minLength": 1,
+          "title": "Learner1 Native Language",
+          "type": "string"
+        },
+        "learner2_native_language": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Learner2 Native Language"
+        },
+        "learning_language": {
+          "minLength": 1,
+          "title": "Learning Language",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "learner_fluent",
+            "two_learners"
+          ],
+          "title": "Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode",
+        "learning_language",
+        "learner1_native_language"
+      ],
+      "title": "SessionConfig",
+      "type": "object"
+    },
+    "SessionEnd": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "type": {
+          "const": "session.end",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version"
+      ],
+      "title": "SessionEnd",
+      "type": "object"
+    },
+    "SessionResume": {
+      "additionalProperties": false,
+      "properties": {
+        "last_sequence": {
+          "minimum": 0,
+          "title": "Last Sequence",
+          "type": "integer"
+        },
+        "pairing_token": {
+          "minLength": 32,
+          "title": "Pairing Token",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "resume_token": {
+          "minLength": 32,
+          "title": "Resume Token",
+          "type": "string"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "session.resume",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version",
+        "pairing_token",
+        "session_id",
+        "resume_token",
+        "last_sequence"
+      ],
+      "title": "SessionResume",
+      "type": "object"
+    },
+    "SessionStart": {
+      "additionalProperties": false,
+      "properties": {
+        "config": {
+          "$ref": "#/$defs/SessionConfig"
+        },
+        "pairing_token": {
+          "minLength": 32,
+          "title": "Pairing Token",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "type": {
+          "const": "session.start",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version",
+        "pairing_token",
+        "config"
+      ],
+      "title": "SessionStart",
+      "type": "object"
+    },
+    "SpeakersSwap": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "type": {
+          "const": "speakers.swap",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "protocol_version"
+      ],
+      "title": "SpeakersSwap",
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "audio.start": "#/$defs/AudioStart",
+      "audio.stop": "#/$defs/AudioStop",
+      "intervention.audio_retry": "#/$defs/InterventionAudioRetry",
+      "playback.ended": "#/$defs/PlaybackEnded",
+      "playback.interrupted": "#/$defs/PlaybackInterrupted",
+      "playback.started": "#/$defs/PlaybackStarted",
+      "session.end": "#/$defs/SessionEnd",
+      "session.resume": "#/$defs/SessionResume",
+      "session.start": "#/$defs/SessionStart",
+      "speakers.swap": "#/$defs/SpeakersSwap"
+    },
+    "propertyName": "type"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/SessionStart"
+    },
+    {
+      "$ref": "#/$defs/SessionResume"
+    },
+    {
+      "$ref": "#/$defs/AudioStart"
+    },
+    {
+      "$ref": "#/$defs/AudioStop"
+    },
+    {
+      "$ref": "#/$defs/SpeakersSwap"
+    },
+    {
+      "$ref": "#/$defs/PlaybackStarted"
+    },
+    {
+      "$ref": "#/$defs/PlaybackEnded"
+    },
+    {
+      "$ref": "#/$defs/PlaybackInterrupted"
+    },
+    {
+      "$ref": "#/$defs/InterventionAudioRetry"
+    },
+    {
+      "$ref": "#/$defs/SessionEnd"
+    }
+  ]
+}

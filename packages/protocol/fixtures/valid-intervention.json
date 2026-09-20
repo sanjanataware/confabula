@@ -1,0 +1,13 @@
+{
+  "type": "intervention.committed",
+  "protocol_version": 1,
+  "session_id": "00000000-0000-4000-8000-000000000001",
+  "sequence": 3,
+  "turn_id": "turn-a",
+  "intervention_id": "00000000-0000-4000-8000-000000000002",
+  "participant_id": "learner_1",
+  "source_text": "grocery store",
+  "source_language": "en",
+  "target_text": "supermercado",
+  "target_language": "es"
+}

@@ -1,0 +1,4 @@
+[
+  {"type":"speechStart","turnId":1,"audioProcessedMs":1200},
+  {"type":"transcript","transcript":"how is the","final":false,"audioProcessedMs":2400}
+]

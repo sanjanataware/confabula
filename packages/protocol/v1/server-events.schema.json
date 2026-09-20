@@ -1,0 +1,853 @@
+{
+  "$defs": {
+    "InterventionAudioFailed": {
+      "additionalProperties": false,
+      "properties": {
+        "intervention_id": {
+          "format": "uuid",
+          "title": "Intervention Id",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "retry_available": {
+          "title": "Retry Available",
+          "type": "boolean"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "turn_id": {
+          "title": "Turn Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "intervention.audio_failed",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "session_id",
+        "sequence",
+        "type",
+        "turn_id",
+        "intervention_id",
+        "retry_available"
+      ],
+      "title": "InterventionAudioFailed",
+      "type": "object"
+    },
+    "InterventionAudioReady": {
+      "additionalProperties": false,
+      "properties": {
+        "audio_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Audio Url"
+        },
+        "intervention_id": {
+          "format": "uuid",
+          "title": "Intervention Id",
+          "type": "string"
+        },
+        "playback_kind": {
+          "enum": [
+            "audio_url",
+            "device_speech"
+          ],
+          "title": "Playback Kind",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "turn_id": {
+          "title": "Turn Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "intervention.audio_ready",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "session_id",
+        "sequence",
+        "type",
+        "turn_id",
+        "intervention_id",
+        "playback_kind",
+        "audio_url"
+      ],
+      "title": "InterventionAudioReady",
+      "type": "object"
+    },
+    "InterventionCancelled": {
+      "additionalProperties": false,
+      "properties": {
+        "intervention_id": {
+          "format": "uuid",
+          "title": "Intervention Id",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "reason": {
+          "enum": [
+            "preview_obsolete",
+            "final_empty",
+            "final_replaced",
+            "session_ended"
+          ],
+          "title": "Reason",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "turn_id": {
+          "title": "Turn Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "intervention.cancelled",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "session_id",
+        "sequence",
+        "type",
+        "turn_id",
+        "intervention_id",
+        "reason"
+      ],
+      "title": "InterventionCancelled",
+      "type": "object"
+    },
+    "InterventionCommitted": {
+      "additionalProperties": false,
+      "properties": {
+        "intervention_id": {
+          "format": "uuid",
+          "title": "Intervention Id",
+          "type": "string"
+        },
+        "participant_id": {
+          "enum": [
+            "learner_1",
+            "learner_2",
+            "fluent_partner"
+          ],
+          "title": "Participant Id",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "source_language": {
+          "minLength": 1,
+          "title": "Source Language",
+          "type": "string"
+        },
+        "source_text": {
+          "minLength": 1,
+          "title": "Source Text",
+          "type": "string"
+        },
+        "target_language": {
+          "minLength": 1,
+          "title": "Target Language",
+          "type": "string"
+        },
+        "target_text": {
+          "minLength": 1,
+          "title": "Target Text",
+          "type": "string"
+        },
+        "turn_id": {
+          "title": "Turn Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "intervention.committed",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "session_id",
+        "sequence",
+        "type",
+        "turn_id",
+        "intervention_id",
+        "participant_id",
+        "source_text",
+        "source_language",
+        "target_text",
+        "target_language"
+      ],
+      "title": "InterventionCommitted",
+      "type": "object"
+    },
+    "InterventionPreview": {
+      "additionalProperties": false,
+      "properties": {
+        "intervention_id": {
+          "format": "uuid",
+          "title": "Intervention Id",
+          "type": "string"
+        },
+        "participant_id": {
+          "enum": [
+            "learner_1",
+            "learner_2",
+            "fluent_partner"
+          ],
+          "title": "Participant Id",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "source_language": {
+          "minLength": 1,
+          "title": "Source Language",
+          "type": "string"
+        },
+        "source_text": {
+          "minLength": 1,
+          "title": "Source Text",
+          "type": "string"
+        },
+        "target_language": {
+          "minLength": 1,
+          "title": "Target Language",
+          "type": "string"
+        },
+        "target_text": {
+          "minLength": 1,
+          "title": "Target Text",
+          "type": "string"
+        },
+        "turn_id": {
+          "title": "Turn Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "intervention.preview",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "session_id",
+        "sequence",
+        "type",
+        "turn_id",
+        "intervention_id",
+        "participant_id",
+        "revision",
+        "source_text",
+        "source_language",
+        "target_text",
+        "target_language"
+      ],
+      "title": "InterventionPreview",
+      "type": "object"
+    },
+    "PlaybackStartRequested": {
+      "additionalProperties": false,
+      "properties": {
+        "intervention_id": {
+          "format": "uuid",
+          "title": "Intervention Id",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "playback.start_requested",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "session_id",
+        "sequence",
+        "type",
+        "intervention_id"
+      ],
+      "title": "PlaybackStartRequested",
+      "type": "object"
+    },
+    "PlaybackStopRequested": {
+      "additionalProperties": false,
+      "properties": {
+        "intervention_id": {
+          "format": "uuid",
+          "title": "Intervention Id",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "reason": {
+          "enum": [
+            "human_speech",
+            "connection_lost"
+          ],
+          "title": "Reason",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "playback.stop_requested",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "session_id",
+        "sequence",
+        "type",
+        "intervention_id",
+        "reason"
+      ],
+      "title": "PlaybackStopRequested",
+      "type": "object"
+    },
+    "SessionDegraded": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "enum": [
+            "muse_start_failed",
+            "muse_connection_lost",
+            "analysis_unavailable",
+            "speech_unavailable"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "recoverable": {
+          "title": "Recoverable",
+          "type": "boolean"
+        },
+        "restart_required": {
+          "title": "Restart Required",
+          "type": "boolean"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "subsystem": {
+          "enum": [
+            "transcription",
+            "translation",
+            "speech"
+          ],
+          "title": "Subsystem",
+          "type": "string"
+        },
+        "type": {
+          "const": "session.degraded",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "session_id",
+        "sequence",
+        "type",
+        "subsystem",
+        "code",
+        "recoverable",
+        "restart_required"
+      ],
+      "title": "SessionDegraded",
+      "type": "object"
+    },
+    "SessionEnded": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "reason": {
+          "enum": [
+            "user_end",
+            "lifetime",
+            "muse_failure",
+            "disconnect_timeout",
+            "shutdown"
+          ],
+          "title": "Reason",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "session.ended",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "session_id",
+        "sequence",
+        "type",
+        "reason"
+      ],
+      "title": "SessionEnded",
+      "type": "object"
+    },
+    "SessionError": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "enum": [
+            "invalid_state",
+            "protocol_error",
+            "resume_unavailable",
+            "unsupported_language",
+            "internal_error"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "recoverable": {
+          "title": "Recoverable",
+          "type": "boolean"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "session.error",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "session_id",
+        "sequence",
+        "type",
+        "code",
+        "message",
+        "recoverable"
+      ],
+      "title": "SessionError",
+      "type": "object"
+    },
+    "SessionReady": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "resume_token": {
+          "minLength": 32,
+          "title": "Resume Token",
+          "type": "string"
+        },
+        "resumed": {
+          "title": "Resumed",
+          "type": "boolean"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "session.ready",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "session_id",
+        "sequence",
+        "type",
+        "resume_token",
+        "resumed"
+      ],
+      "title": "SessionReady",
+      "type": "object"
+    },
+    "SessionStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "activities": {
+          "items": {
+            "enum": [
+              "listening",
+              "analyzing",
+              "audio_pending",
+              "speaking"
+            ],
+            "type": "string"
+          },
+          "title": "Activities",
+          "type": "array"
+        },
+        "connection_state": {
+          "enum": [
+            "idle",
+            "connecting",
+            "active",
+            "degraded",
+            "ended"
+          ],
+          "title": "Connection State",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "session.status",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "session_id",
+        "sequence",
+        "type",
+        "connection_state",
+        "activities"
+      ],
+      "title": "SessionStatus",
+      "type": "object"
+    },
+    "SessionWarning": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "reason": {
+          "const": "expiring",
+          "title": "Reason",
+          "type": "string"
+        },
+        "seconds_remaining": {
+          "minimum": 0,
+          "title": "Seconds Remaining",
+          "type": "integer"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "session.warning",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "session_id",
+        "sequence",
+        "type",
+        "reason",
+        "seconds_remaining"
+      ],
+      "title": "SessionWarning",
+      "type": "object"
+    },
+    "SpeakerMapped": {
+      "additionalProperties": false,
+      "properties": {
+        "display_label": {
+          "minLength": 1,
+          "title": "Display Label",
+          "type": "string"
+        },
+        "participant_id": {
+          "enum": [
+            "learner_1",
+            "learner_2",
+            "fluent_partner"
+          ],
+          "title": "Participant Id",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": 1,
+          "title": "Protocol Version",
+          "type": "integer"
+        },
+        "provider_label": {
+          "minLength": 1,
+          "title": "Provider Label",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "uuid",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "speaker.mapped",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "session_id",
+        "sequence",
+        "type",
+        "provider_label",
+        "participant_id",
+        "display_label"
+      ],
+      "title": "SpeakerMapped",
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "intervention.audio_failed": "#/$defs/InterventionAudioFailed",
+      "intervention.audio_ready": "#/$defs/InterventionAudioReady",
+      "intervention.cancelled": "#/$defs/InterventionCancelled",
+      "intervention.committed": "#/$defs/InterventionCommitted",
+      "intervention.preview": "#/$defs/InterventionPreview",
+      "playback.start_requested": "#/$defs/PlaybackStartRequested",
+      "playback.stop_requested": "#/$defs/PlaybackStopRequested",
+      "session.degraded": "#/$defs/SessionDegraded",
+      "session.ended": "#/$defs/SessionEnded",
+      "session.error": "#/$defs/SessionError",
+      "session.ready": "#/$defs/SessionReady",
+      "session.status": "#/$defs/SessionStatus",
+      "session.warning": "#/$defs/SessionWarning",
+      "speaker.mapped": "#/$defs/SpeakerMapped"
+    },
+    "propertyName": "type"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/SessionReady"
+    },
+    {
+      "$ref": "#/$defs/SessionStatus"
+    },
+    {
+      "$ref": "#/$defs/SessionWarning"
+    },
+    {
+      "$ref": "#/$defs/SpeakerMapped"
+    },
+    {
+      "$ref": "#/$defs/InterventionPreview"
+    },
+    {
+      "$ref": "#/$defs/InterventionCommitted"
+    },
+    {
+      "$ref": "#/$defs/InterventionAudioReady"
+    },
+    {
+      "$ref": "#/$defs/InterventionAudioFailed"
+    },
+    {
+      "$ref": "#/$defs/InterventionCancelled"
+    },
+    {
+      "$ref": "#/$defs/PlaybackStartRequested"
+    },
+    {
+      "$ref": "#/$defs/PlaybackStopRequested"
+    },
+    {
+      "$ref": "#/$defs/SessionDegraded"
+    },
+    {
+      "$ref": "#/$defs/SessionError"
+    },
+    {
+      "$ref": "#/$defs/SessionEnded"
+    }
+  ]
+}

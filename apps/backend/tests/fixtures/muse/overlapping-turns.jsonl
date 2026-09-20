@@ -1,0 +1,10 @@
+{"type":"speechStart","turnId":1,"audioProcessedMs":1000}
+{"type":"transcript","transcript":"I need","final":false,"audioProcessedMs":1200}
+{"type":"speaker","label":"A","audioProcessedMs":1280}
+{"type":"speechStart","turnId":2,"audioProcessedMs":1400}
+{"type":"transcript","transcript":"Claro","final":false,"audioProcessedMs":1600}
+{"type":"speaker","label":"B","audioProcessedMs":1680}
+{"type":"speechEnd","turnId":2,"audioProcessedMs":1800}
+{"type":"speechComplete","turnId":2,"transcript":"Claro.","audioProcessedMs":1800}
+{"type":"speechEnd","turnId":1,"audioProcessedMs":2000}
+{"type":"speechComplete","turnId":1,"transcript":"I need the grocery store.","audioProcessedMs":2000}
