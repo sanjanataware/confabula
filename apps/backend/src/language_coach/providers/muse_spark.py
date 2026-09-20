@@ -3,7 +3,7 @@ import json
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from openai import APIError, APITimeoutError
+from openai import APIError, APITimeoutError, LengthFinishReasonError
 from pydantic import ValidationError
 
 from language_coach.domain.interventions import source_is_contained
@@ -23,14 +23,20 @@ class MuseSparkAnalyzer:
         client: Any,
         model: str = "muse-spark-1.3",
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
-        speculative_timeout_s: float = 15,
-        final_timeout_s: float = 30,
+        speculative_timeout_s: float = 8,
+        final_timeout_s: float = 12,
+        reasoning_effort: str = "minimal",
+        speculative_max_tokens: int = 384,
+        final_max_tokens: int = 384,
     ) -> None:
         self._client = client
         self._model = model
         self._sleep = sleep
         self._speculative_timeout_s = speculative_timeout_s
         self._final_timeout_s = final_timeout_s
+        self._reasoning_effort = reasoning_effort
+        self._speculative_max_tokens = speculative_max_tokens
+        self._final_max_tokens = final_max_tokens
 
     async def analyze(self, request: AnalysisRequest) -> InterventionAnalysis:
         attempts = 2 if request.final else 1
@@ -43,7 +49,14 @@ class MuseSparkAnalyzer:
                 if attempt + 1 >= attempts or not self._is_transient(error):
                     raise AnalysisUnavailable("Muse Spark analysis unavailable") from None
                 await self._sleep(0.1)
-            except (ValidationError, AttributeError, IndexError, TypeError, ValueError):
+            except (
+                ValidationError,
+                LengthFinishReasonError,
+                AttributeError,
+                IndexError,
+                TypeError,
+                ValueError,
+            ):
                 raise AnalysisUnavailable("Muse Spark returned invalid output") from None
         raise AnalysisUnavailable("Muse Spark analysis unavailable")
 
@@ -63,6 +76,12 @@ class MuseSparkAnalyzer:
                     {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)},
                 ],
                 response_format=InterventionAnalysis,
+                reasoning_effort=self._reasoning_effort,
+                prompt_cache_key="language-coach-code-switch-v1",
+                max_tokens=(
+                    self._final_max_tokens if request.final
+                    else self._speculative_max_tokens
+                ),
                 timeout=timeout_s,
             )
 

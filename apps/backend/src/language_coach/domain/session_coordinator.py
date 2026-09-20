@@ -60,6 +60,7 @@ from language_coach.providers.device_speech import DEVICE_SPEECH_CONTENT_TYPE
 from language_coach.providers.interfaces import (
     AnalysisRequest,
     AnalysisUnavailable,
+    InterventionAnalysis,
     InvalidPcmFrame,
     MuseStartFailed,
     SparkAnalyzer,
@@ -76,6 +77,8 @@ from language_coach.services.safe_logging import log_event
 
 logger = logging.getLogger(__name__)
 ACTIVITIES: tuple[Activity, ...] = ("listening", "analyzing", "audio_pending", "speaking")
+SPECULATIVE_DEBOUNCE_MS = 400
+MIN_SPECULATIVE_TOKENS = 2
 
 
 class Clock(Protocol):
@@ -105,6 +108,18 @@ class PlaybackWindow:
     started_at_ms: int
     target_text: str
     ended_at_ms: int | None = None
+
+
+@dataclass(frozen=True)
+class PreviewAnalysis:
+    transcript: str
+    participant: ParticipantId
+    mapping_generation: int
+    analysis: InterventionAnalysis
+
+
+def normalize_analysis_snapshot(value: str) -> str:
+    return re.sub(r"[^\w]+", " ", normalize_fragment(value)).strip()
 
 
 class ConversationCoordinator:
@@ -147,8 +162,12 @@ class ConversationCoordinator:
         self._turn_labels: dict[str, str] = {}
         self._turn_windows: dict[str, list[PlaybackWindow]] = {}
         self._windows: list[PlaybackWindow] = []
-        self._partial_tasks: dict[str, asyncio.Task[None]] = {}
-        self._tasks: set[asyncio.Task[None]] = set()
+        self._partial_tasks: dict[str, asyncio.Task[PreviewAnalysis | None]] = {}
+        self._partial_snapshots: dict[str, str] = {}
+        self._preview_analysis_started: set[str] = set()
+        self._preview_refresh_pending: set[str] = set()
+        self._preview_cache: dict[str, PreviewAnalysis] = {}
+        self._tasks: set[asyncio.Task[Any]] = set()
         self._task_group: asyncio.TaskGroup | None = None
         self._input_audio_ms = 0
         self._started_at_ms = 0
@@ -219,7 +238,9 @@ class ConversationCoordinator:
         except (RuntimeError, OSError, ValueError):
             raise MuseStartFailed("Muse start failed") from None
 
-    def _spawn(self, work: Coroutine[Any, Any, None]) -> asyncio.Task[None] | None:
+    def _spawn[Result](
+        self, work: Coroutine[Any, Any, Result]
+    ) -> asyncio.Task[Result] | None:
         if self._task_group is None or self.stopping:
             work.close()
             return None
@@ -384,32 +405,83 @@ class ConversationCoordinator:
             ParticipantId.LEARNER_1, ParticipantId.LEARNER_2,
         }:
             return
-        prior = self._partial_tasks.pop(turn_id, None)
-        if prior is not None:
+        if len(normalize_analysis_snapshot(record.text).split()) < MIN_SPECULATIVE_TOKENS:
+            return
+        prior = self._partial_tasks.get(turn_id)
+        if prior is not None and not prior.done():
+            if turn_id in self._preview_analysis_started:
+                self._preview_refresh_pending.add(turn_id)
+                return
             prior.cancel()
-        task = self._spawn(self._debounced_preview(
+        self._partial_tasks.pop(turn_id, None)
+        self._partial_snapshots.pop(turn_id, None)
+        task = self._spawn(self._run_preview(
             turn_id, record.revision, record.text, participant, self._mapping_generation,
         ))
         if task is not None:
             self._partial_tasks[turn_id] = task
+            self._partial_snapshots[turn_id] = record.text
+
+    async def _run_preview(
+        self, turn_id: str, revision: int, transcript: str,
+        participant: ParticipantId, mapping_generation: int,
+    ) -> PreviewAnalysis | None:
+        try:
+            return await self._debounced_preview(
+                turn_id, revision, transcript, participant, mapping_generation,
+            )
+        finally:
+            self._preview_analysis_started.discard(turn_id)
+            current_task = asyncio.current_task()
+            if self._partial_tasks.get(turn_id) is current_task:
+                self._partial_tasks.pop(turn_id, None)
+                self._partial_snapshots.pop(turn_id, None)
+            if turn_id in self._preview_refresh_pending:
+                self._preview_refresh_pending.discard(turn_id)
+                if not self.stopping and not self.transcripts.get(turn_id).final:
+                    self._schedule_preview(turn_id)
 
     async def _debounced_preview(
         self, turn_id: str, revision: int, transcript: str,
         participant: ParticipantId, mapping_generation: int,
-    ) -> None:
-        await self.clock.sleep_ms(300)
+    ) -> PreviewAnalysis | None:
+        await self.clock.sleep_ms(SPECULATIVE_DEBOUNCE_MS)
         current = self.transcripts.get(turn_id)
-        if current.final or current.revision != revision or mapping_generation != self._mapping_generation:
-            return
-        try:
-            analysis = await self.analyzer.analyze(
-                self._analysis_request(turn_id, transcript, participant, final=False)
+        if (
+            mapping_generation != self._mapping_generation
+            or (not current.final and current.revision != revision)
+            or (
+                current.final
+                and normalize_analysis_snapshot(current.text)
+                != normalize_analysis_snapshot(transcript)
             )
-        except AnalysisUnavailable:
-            return
+        ):
+            return None
+        self._preview_analysis_started.add(turn_id)
+        preview_started = time.perf_counter()
+        preview_completed = False
+        try:
+            try:
+                analysis = await self.analyzer.analyze(
+                    self._analysis_request(turn_id, transcript, participant, final=False)
+                )
+            except AnalysisUnavailable:
+                return None
+            preview_completed = True
+        finally:
+            log_event(logger, logging.INFO, "latency_stage", {
+                "stage": "speculative_analysis",
+                "duration_ms": round((time.perf_counter() - preview_started) * 1000),
+                "completed": preview_completed,
+            })
+        result = PreviewAnalysis(transcript, participant, mapping_generation, analysis)
+        self._preview_cache[turn_id] = result
         current = self.transcripts.get(turn_id)
-        if self.stopping or current.final or current.revision != revision or mapping_generation != self._mapping_generation:
-            return
+        if (
+            self.stopping or current.final or current.revision != revision
+            or mapping_generation != self._mapping_generation
+        ):
+            return result
         sources = {normalize_fragment(candidate.source_text) for candidate in analysis.interventions}
         for record in self.interventions.reconcile_previews(turn_id, sources, "preview_obsolete"):
             await self._emit_cancelled(record, "preview_obsolete")
@@ -425,13 +497,21 @@ class ConversationCoordinator:
                     source_text=preview.source_text, source_language=preview.source_language,
                     target_text=preview.target_text, target_language=preview.target_language,
                 ))
+        return result
 
     async def _on_completed(self, event: SpeechCompleted) -> None:
         record = self.transcripts.get(event.turn_id)
         if record.final:
             return
         task = self._partial_tasks.pop(event.turn_id, None)
-        if task is not None:
+        snapshot = self._partial_snapshots.pop(event.turn_id, None)
+        self._preview_refresh_pending.discard(event.turn_id)
+        reusable_task = task if (
+            task is not None and snapshot is not None
+            and normalize_analysis_snapshot(snapshot)
+            == normalize_analysis_snapshot(event.text)
+        ) else None
+        if task is not None and reusable_task is None:
             task.cancel()
         self.interventions.finalize_turn(event.turn_id)
         self.transcripts.finalize(
@@ -446,14 +526,44 @@ class ConversationCoordinator:
         self.playback.on_speech_completed(event.turn_id, self.clock.now_ms())
         participant = self._participant(event.turn_id)
         if participant in {ParticipantId.LEARNER_1, ParticipantId.LEARNER_2}:
-            self._spawn(self._analyze_final(event.turn_id, event.text, participant))
+            self._spawn(self._analyze_final(
+                event.turn_id, event.text, participant, reusable_task,
+            ))
 
-    async def _analyze_final(self, turn_id: str, text: str, participant: ParticipantId) -> None:
+    async def _analyze_final(
+        self,
+        turn_id: str,
+        text: str,
+        participant: ParticipantId,
+        preview_task: asyncio.Task[PreviewAnalysis | None] | None = None,
+    ) -> None:
         await self._activity("analyzing", 1)
+        analysis_started = time.perf_counter()
+        speculative_reused = False
         try:
-            analysis = await self.analyzer.analyze(
-                self._analysis_request(turn_id, text, participant, final=True)
-            )
+            def reusable(candidate: PreviewAnalysis | None) -> bool:
+                return bool(
+                    candidate is not None
+                    and candidate.participant == participant
+                    and candidate.mapping_generation == self._mapping_generation
+                    and normalize_analysis_snapshot(candidate.transcript)
+                    == normalize_analysis_snapshot(text)
+                )
+
+            speculative = self._preview_cache.get(turn_id)
+            if not reusable(speculative) and preview_task is not None:
+                try:
+                    speculative = await preview_task
+                except asyncio.CancelledError:
+                    speculative = None
+            if reusable(speculative):
+                assert speculative is not None
+                analysis = speculative.analysis
+                speculative_reused = True
+            else:
+                analysis = await self.analyzer.analyze(
+                    self._analysis_request(turn_id, text, participant, final=True)
+                )
             if any(not source_is_contained(item.source_text, text) for item in analysis.interventions):
                 raise AnalysisUnavailable("analysis source is not contained")
         except AnalysisUnavailable:
@@ -462,6 +572,12 @@ class ConversationCoordinator:
                 await self._emit_cancelled(record, "final_empty")
             return
         finally:
+            self._preview_cache.pop(turn_id, None)
+            log_event(logger, logging.INFO, "latency_stage", {
+                "stage": "analysis",
+                "duration_ms": round((time.perf_counter() - analysis_started) * 1000),
+                "speculative_reused": speculative_reused,
+            })
             await self._activity("analyzing", -1)
         if self.stopping:
             return
@@ -501,6 +617,7 @@ class ConversationCoordinator:
 
     async def _synthesize(self, record: InterventionRecord) -> None:
         await self._activity("audio_pending", 1)
+        synthesis_started = time.perf_counter()
         try:
             audio = await self.synthesizer.synthesize(
                 SpeechRequest(record.target_text, self.config.learning_language)
@@ -532,6 +649,10 @@ class ConversationCoordinator:
             ))
             await self._degrade("speech", "speech_unavailable")
         finally:
+            log_event(logger, logging.INFO, "latency_stage", {
+                "stage": "speech_synthesis",
+                "duration_ms": round((time.perf_counter() - synthesis_started) * 1000),
+            })
             await self._activity("audio_pending", -1)
 
     async def _playback_loop(self) -> None:
@@ -598,6 +719,10 @@ class ConversationCoordinator:
         for task in self._partial_tasks.values():
             task.cancel()
         self._partial_tasks.clear()
+        self._partial_snapshots.clear()
+        self._preview_analysis_started.clear()
+        self._preview_refresh_pending.clear()
+        self._preview_cache.clear()
         for label, participant in self.speaker_mapping.labels.items():
             await self._emit_mapping(label, participant)
 
@@ -662,6 +787,10 @@ class ConversationCoordinator:
             finally:
                 self._transcription = None
                 self._partial_tasks.clear()
+                self._partial_snapshots.clear()
+                self._preview_analysis_started.clear()
+                self._preview_refresh_pending.clear()
+                self._preview_cache.clear()
                 self._tasks.clear()
                 self._turn_labels.clear()
                 self._turn_windows.clear()

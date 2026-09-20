@@ -144,7 +144,7 @@ async def test_final_intervention_is_spoken_after_quiet_window() -> None:
             SpeakerObserved("turn-a", "A", 1050),
             TranscriptPartial("turn-a", 1, "Necesito grocery store", 1200),
         )
-        await ctx.clock.advance_and_flush(300)
+        await ctx.clock.advance_and_flush(400)
         await ctx.emit(SpeechCompleted("turn-a", "Necesito grocery store", "A", 1500))
         await ctx.clock.advance_and_flush(599)
         assert not ctx.events("playback.start_requested")
@@ -159,6 +159,25 @@ async def test_final_intervention_is_spoken_after_quiet_window() -> None:
     assert ctx.coordinator.audio_store.size_bytes == 0
     assert ctx.session.closed
     assert ctx.coordinator.transcripts.count == 0
+
+
+@pytest.mark.asyncio
+async def test_matching_speculative_analysis_is_reused_for_the_final_turn() -> None:
+    async with conversation() as ctx:
+        ctx.analyzer.add(positive())
+        await ctx.emit(
+            SpeechStarted("turn-a", 1000),
+            SpeakerObserved("turn-a", "A", 1050),
+            TranscriptPartial("turn-a", 1, "Necesito grocery store", 1200),
+        )
+        await ctx.clock.advance_and_flush(400)
+        preview = ctx.events("intervention.preview")[0]
+        await ctx.emit(SpeechCompleted("turn-a", "Necesito grocery store.", "A", 1500))
+        await flush_tasks()
+        committed = ctx.events("intervention.committed")[0]
+        assert committed.intervention_id == preview.intervention_id
+        assert len(ctx.analyzer.calls) == 1
+        assert not ctx.analyzer.calls[0].final
 
 
 @pytest.mark.asyncio
@@ -181,9 +200,26 @@ async def test_partial_before_speaker_starts_preview_when_learner_is_known() -> 
             TranscriptPartial("turn-a", 1, "Necesito grocery store", 180),
             SpeakerObserved("turn-a", "A", 200),
         )
-        await ctx.clock.advance_and_flush(300)
+        await ctx.clock.advance_and_flush(400)
         assert len(ctx.events("intervention.preview")) == 1
         assert not ctx.synthesizer.calls
+
+
+@pytest.mark.asyncio
+async def test_one_token_partial_waits_for_the_final_turn() -> None:
+    async with conversation() as ctx:
+        await ctx.emit(
+            SpeechStarted("turn-a", 100),
+            SpeakerObserved("turn-a", "A", 120),
+            TranscriptPartial("turn-a", 1, "supermarket", 180),
+        )
+        await ctx.clock.advance_and_flush(400)
+        assert not ctx.analyzer.calls
+        ctx.analyzer.add(positive("supermarket", "supermercado"))
+        await ctx.emit(SpeechCompleted("turn-a", "supermarket", "A", 800))
+        await flush_tasks()
+        assert len(ctx.analyzer.calls) == 1
+        assert ctx.analyzer.calls[0].final
 
 
 @pytest.mark.asyncio
@@ -235,6 +271,26 @@ class BlockedAnalyzer(FakeAnalyzer):
 
 
 @pytest.mark.asyncio
+async def test_matching_inflight_preview_becomes_the_final_analysis() -> None:
+    analyzer = BlockedAnalyzer()
+    async with conversation(analyzer) as ctx:
+        await ctx.emit(
+            SpeechStarted("a", 0), SpeakerObserved("a", "A", 10),
+            TranscriptPartial("a", 1, "grocery store", 20),
+        )
+        await ctx.clock.advance_and_flush(400)
+        await analyzer.called.wait()
+        await ctx.emit(TranscriptPartial("a", 2, "grocery store.", 60))
+        assert len(analyzer.calls) == 1
+        await ctx.emit(SpeechCompleted("a", "grocery store.", "A", 80))
+        assert len(analyzer.calls) == 1
+        analyzer.release.set()
+        await flush_tasks()
+        assert len(ctx.events("intervention.committed")) == 1
+        assert len(analyzer.calls) == 1
+
+
+@pytest.mark.asyncio
 async def test_human_speech_is_consumed_while_final_analysis_is_pending() -> None:
     analyzer = BlockedAnalyzer()
     async with conversation(analyzer) as ctx:
@@ -260,7 +316,7 @@ async def test_final_empty_cancels_preview_and_changed_final_replaces_it() -> No
             SpeechStarted("a", 0), SpeakerObserved("a", "A", 10),
             TranscriptPartial("a", 1, "grocery store", 20),
         )
-        await ctx.clock.advance_and_flush(300)
+        await ctx.clock.advance_and_flush(400)
         preview = ctx.events("intervention.preview")[0]
         await ctx.emit(SpeechCompleted("a", "train station", "A", 80))
         cancelled = ctx.events("intervention.cancelled")
@@ -274,7 +330,7 @@ async def test_final_empty_cancels_preview_and_changed_final_replaces_it() -> No
             SpeechStarted("b", 100), SpeakerObserved("b", "A", 110),
             TranscriptPartial("b", 1, "grocery store", 120),
         )
-        await ctx.clock.advance_and_flush(300)
+        await ctx.clock.advance_and_flush(400)
         await ctx.emit(SpeechCompleted("b", "Todo bien", "A", 200))
         assert ctx.events("intervention.cancelled")[-1].reason == "final_empty"
 

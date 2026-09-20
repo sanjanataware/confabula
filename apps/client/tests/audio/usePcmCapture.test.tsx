@@ -47,6 +47,23 @@ test('emits exact little-endian frames and releases capture on stop', async () =
   await hook.unmount();
 });
 
+test('publishes capture diagnostics at most once per second after the first frame', async () => {
+  let now = 0;
+  const clock = jest.spyOn(Date, 'now').mockImplementation(() => now);
+  const hook = await renderHook(() => usePcmCapture({ onFrame: jest.fn() }));
+  await act(async () => { await hook.result.current.start(true); });
+  await act(async () => mockOnBuffer({ data: new ArrayBuffer(3840), channels: 1, sampleRate: 24000 }));
+  expect(hook.result.current.diagnostics.emittedFrameCount).toBe(1);
+  now = 100;
+  await act(async () => mockOnBuffer({ data: new ArrayBuffer(3840), channels: 1, sampleRate: 24000 }));
+  expect(hook.result.current.diagnostics.emittedFrameCount).toBe(1);
+  now = 1100;
+  await act(async () => mockOnBuffer({ data: new ArrayBuffer(3840), channels: 1, sampleRate: 24000 }));
+  expect(hook.result.current.diagnostics.emittedFrameCount).toBe(3);
+  clock.mockRestore();
+  await hook.unmount();
+});
+
 test('format failures stop the actual stream instead of leaving the microphone open', async () => {
   const hook = await renderHook(() => usePcmCapture({ onFrame: jest.fn() }));
   await act(async () => { await hook.result.current.start(true); });

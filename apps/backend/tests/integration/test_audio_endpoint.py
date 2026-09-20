@@ -29,6 +29,7 @@ def test_audio_asset_is_session_scoped_and_no_store() -> None:
             assert response.status_code == 200
             assert response.content == b"fixture-audio"
             assert response.headers["cache-control"] == "no-store, max-age=0"
+            assert response.headers["content-length"] == str(len(b"fixture-audio"))
             assert (
                 client.get(
                     f"/v1/sessions/{uuid4()}/audio/{asset_id}"

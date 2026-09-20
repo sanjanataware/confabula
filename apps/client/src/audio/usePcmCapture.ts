@@ -25,7 +25,7 @@ class CoachPcmCapture extends AudioWorkletProcessor {
     if (!channels || !channels.length || !channels[0].length) return true;
     if (this.channels !== channels.length) {
       this.channels = channels.length;
-      this.buffer = new Float32Array(2048 * this.channels);
+      this.buffer = new Float32Array(1920 * this.channels);
       this.offset = 0;
     }
     for (let frame = 0; frame < channels[0].length; frame++) {
@@ -35,7 +35,7 @@ class CoachPcmCapture extends AudioWorkletProcessor {
       if (this.offset === this.buffer.length) {
         const data = this.buffer.buffer;
         this.port.postMessage({ data, channels: this.channels, sampleRate, encoding: 'float32' }, [data]);
-        this.buffer = new Float32Array(2048 * this.channels);
+        this.buffer = new Float32Array(1920 * this.channels);
         this.offset = 0;
       }
     }
@@ -83,10 +83,13 @@ export function usePcmCapture({ onFrame, onError }: {
   const mounted = useRef(true);
   const pending = useRef<Promise<boolean> | null>(null);
   const [state, setState] = useState<CaptureState>('idle');
-  const [diagnostics, setDiagnostics] = useState<CaptureDiagnostics>({
+  const initialDiagnostics: CaptureDiagnostics = {
     sampleRate: null, channels: null, encoding: SOURCE_ENCODING,
     emittedFrameCount: 0, lastFrameByteLength: null,
-  });
+  };
+  const diagnosticsRef = useRef(initialDiagnostics);
+  const lastDiagnosticsPublishedAt = useRef(0);
+  const [diagnostics, setDiagnostics] = useState<CaptureDiagnostics>(initialDiagnostics);
   onFrameRef.current = onFrame;
   onErrorRef.current = onError;
 
@@ -136,11 +139,18 @@ export function usePcmCapture({ onFrame, onError }: {
         onFrameRef.current(frame);
       }
       if (mounted.current && capturing.current && frames.length) {
-        setDiagnostics((current) => ({
+        const current = diagnosticsRef.current;
+        const next = {
           sampleRate: buffer.sampleRate, channels: buffer.channels, encoding: buffer.encoding,
           emittedFrameCount: current.emittedFrameCount + frames.length,
           lastFrameByteLength: frames.at(-1)?.byteLength ?? null,
-        }));
+        };
+        diagnosticsRef.current = next;
+        const now = Date.now();
+        if (current.emittedFrameCount === 0 || now - lastDiagnosticsPublishedAt.current >= 1000) {
+          lastDiagnosticsPublishedAt.current = now;
+          setDiagnostics(next);
+        }
       }
     } catch (error) {
       fail(error instanceof PcmFormatError ? error.code : 'error');
@@ -167,7 +177,14 @@ export function usePcmCapture({ onFrame, onError }: {
     }
     let context: AudioContext;
     try {
-      context = new AudioContext();
+      try {
+        context = new AudioContext({
+          sampleRate: TARGET_SAMPLE_RATE,
+          latencyHint: 'interactive',
+        });
+      } catch {
+        context = new AudioContext({ latencyHint: 'interactive' });
+      }
     } catch {
       for (const track of media.getTracks()) track.stop();
       fail('unsupported_audio_format');

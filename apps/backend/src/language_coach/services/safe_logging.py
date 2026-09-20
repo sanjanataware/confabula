@@ -8,13 +8,17 @@ _ALLOWED_FIELDS = {
     "turn_id",
     "intervention_id",
     "duration_ms",
+    "completed",
     "status_code",
     "provider_request_id",
     "exception_class",
+    "stage",
+    "speculative_reused",
 }
 
 
 def configure_safe_logging() -> None:
+    logging.getLogger("language_coach").setLevel(logging.INFO)
     for name in ("httpx", "httpx2", "httpcore", "httpcore2", "openai", "elevenlabs", "uvicorn.access"):
         logger = logging.getLogger(name)
         logger.setLevel(logging.CRITICAL + 1)
@@ -32,4 +36,4 @@ def log_event(
     metadata: Mapping[str, Any] | None = None,
 ) -> None:
     fields = safe_metadata(event_type=event_type, **dict(metadata or {}))
-    logger.log(level, event_type, extra={"safe_metadata": fields})
+    logger.log(level, "%s %s", event_type, fields, extra={"safe_metadata": fields})

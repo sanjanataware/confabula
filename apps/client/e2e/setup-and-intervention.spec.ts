@@ -122,6 +122,7 @@ test('preview, final help, device speech, echo protection, barge-in, replay, and
   await expect(page.getByRole('button', { name: 'Replay supermercado' })).toBeVisible();
   await expect.poll(() => playback.filter((event) => event.type === 'playback.started').length).toBe(1);
   expect(playback[0].at - finalizedAt).toBeGreaterThanOrEqual(600);
+  expect(playback[0].at - finalizedAt).toBeLessThan(1200);
   expect(playback[0].manual).toBe(false);
   await expect.poll(async () => (await state(request)).playing).toBe(1);
   await expect(page.getByTestId(/^intervention-/)).toHaveCount(1);

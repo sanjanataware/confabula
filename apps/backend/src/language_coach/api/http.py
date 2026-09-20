@@ -55,6 +55,7 @@ async def session_audio(
         media_type=asset.content_type,
         headers={
             "Cache-Control": "no-store, max-age=0",
+            "Content-Length": str(len(asset.data)),
             "X-Content-Type-Options": "nosniff",
         },
     )

@@ -45,10 +45,27 @@ async def test_positive_result_returns_only_native_fragment_and_two_context_turn
     client, completions = fake_client(POSITIVE)
     result = await MuseSparkAnalyzer(client).analyze(replace(REQUEST, context=("old", "prior", "recent")))
     assert result.interventions[0].source_text == "grocery store"
+    assert result.interventions[0].source_language == "English"
     assert result.interventions[0].target_text == "supermercado"
+    assert result.interventions[0].target_language == "Spanish"
     assert len(completions.calls) == 1
     assert completions.calls[0]["model"] == "muse-spark-1.3"
+    assert completions.calls[0]["reasoning_effort"] == "minimal"
+    assert completions.calls[0]["prompt_cache_key"] == "language-coach-code-switch-v1"
+    assert completions.calls[0]["max_tokens"] == 384
+    assert completions.calls[0]["timeout"] == 12
     assert '"old"' not in completions.calls[0]["messages"][1]["content"]
+
+
+@pytest.mark.asyncio
+async def test_speculative_request_uses_the_lower_latency_budget() -> None:
+    client, completions = fake_client(POSITIVE)
+    await MuseSparkAnalyzer(client).analyze(replace(REQUEST, final=False))
+    assert completions.calls[0]["model"] == "muse-spark-1.3"
+    assert completions.calls[0]["reasoning_effort"] == "minimal"
+    assert completions.calls[0]["prompt_cache_key"] == "language-coach-code-switch-v1"
+    assert completions.calls[0]["max_tokens"] == 384
+    assert completions.calls[0]["timeout"] == 8
 
 
 @pytest.mark.asyncio
