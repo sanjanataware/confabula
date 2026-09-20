@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Request
 from starlette.responses import StreamingResponse
 
 from language_coach.config import Settings
+from language_coach.providers.kokoro import KOKORO_ROUTES
 from language_coach.services.audio_assets import AudioAssetNotFound
 from language_coach.services.capabilities import CAPABILITIES
 from language_coach.services.session_registry import SessionRegistry, SessionUnavailable
@@ -26,7 +27,11 @@ async def capabilities() -> dict[str, object]:
                 "code": capability.code,
                 "display_name": capability.display_name,
                 "muse_bias_name": capability.muse_bias_name,
-                "speech_route": {"kind": "device_speech"},
+                "speech_route": (
+                    {"kind": "local_neural", "fallback": "device_speech"}
+                    if capability.code in KOKORO_ROUTES
+                    else {"kind": "device_speech"}
+                ),
             }
             for capability in CAPABILITIES.values()
         ],

@@ -2,6 +2,7 @@
 
 - Install backend dependencies: `cd apps/backend && uv sync`
 - Install client dependencies: `cd apps/client && npm ci`
+- Download and warm local neural speech: `make speech-setup`
 - Run all offline checks: `make check`
 - Run deterministic browser E2E: `make e2e`
 - Export web: `cd apps/client && npx expo export --platform web`
@@ -9,7 +10,7 @@
 - Regenerate protocol: `cd apps/backend && uv run python scripts/export_protocol_schema.py && cd ../client && npm run protocol:generate`
 - Syntax-check launch scripts: `bash -n scripts/dev-cert.sh scripts/dev-backend.sh scripts/dev-client.sh`
 
-`MUSE_API_KEY` is the only production provider credential. Device-native translation speech uses `expo-speech` and requires no backend key. The legacy ElevenLabs adapter and opt-in tests remain for comparison only; never put provider values in Expo variables, client code, URLs, logs, tests, or commits.
+`MUSE_API_KEY` is the only production provider credential. Kokoro-82M is the local neural speech primary for its supported languages and `expo-speech` is the device fallback; neither requires a backend TTS key. Run `make speech-setup` before demos. The legacy ElevenLabs adapter and opt-in tests remain for comparison only; never put provider values in Expo variables, client code, URLs, logs, tests, or commits.
 
 Default tests must never call paid providers. `make provider-smoke` is explicitly opt-in and also requires the live variables documented in `docs/testing/provider-smoke-tests.md`.
 

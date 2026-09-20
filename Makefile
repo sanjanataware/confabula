@@ -1,10 +1,13 @@
-.PHONY: backend-test client-test check dev-cert backend-dev client-web client-android e2e provider-smoke elevenlabs-smoke
+.PHONY: backend-test client-test check speech-setup dev-cert backend-dev client-web client-android e2e provider-smoke elevenlabs-smoke
 
 backend-test:
 	cd apps/backend && uv run pytest -m "not live_provider"
 
 client-test:
 	cd apps/client && npm test -- --runInBand
+
+speech-setup:
+	cd apps/backend && uv run python scripts/prepare_local_speech.py
 
 dev-cert:
 	./scripts/dev-cert.sh

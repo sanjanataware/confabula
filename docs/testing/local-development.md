@@ -4,6 +4,7 @@
 
 - Python 3.12 and `uv`
 - Node.js and npm
+- `espeak-ng` for multilingual Kokoro phonemization
 - `mkcert` for trusted localhost HTTPS
 - Chrome for web testing
 - Android platform tools, USB debugging, and Expo Go or a development build for the S26 path
@@ -12,16 +13,18 @@
 
 Copy `.env.example` to `.env` at the repository root. Set `MUSE_API_KEY` for Meta Muse Voice Transcribe and Muse Spark. Never place it in Expo variables or client code.
 
-The application state is local and ephemeral, but processing is not offline: microphone audio and intervention analysis go to Meta, so internet access is required and provider retention follows the configured Meta account. Translated speech is requested through the browser or Android system speech engine rather than a backend TTS provider. Voice availability, downloads, and any network processing depend on the configured OS/browser speech engine.
+The application state is local and ephemeral, but processing is not offline: microphone audio and intervention analysis go to Meta, so internet access is required and provider retention follows the configured Meta account. Kokoro neural speech runs locally on the backend for English, Spanish, French, Hindi, Italian, Japanese, Portuguese, and Mandarin. Other languages or local-model failures use the browser or Android system speech engine.
 
 ## Trusted web workflow
 
-1. Run `make dev-cert` once and approve the local trust prompt.
-2. Run `make backend-dev` in one terminal. Copy the one-time pairing token printed there.
-3. Run `make client-web` in another terminal.
-4. Open `https://localhost:8443`, enter the backend address `https://localhost:8444` and pairing token, then grant microphone permission.
+1. Install `espeak-ng` (`brew install espeak-ng` on macOS or `apt install espeak-ng` on Debian/Ubuntu).
+2. Run `make speech-setup` once. This downloads roughly 625 MB of Apache-2.0 Kokoro weights into the user cache, outside the repository.
+3. Run `make dev-cert` once and approve the local trust prompt.
+4. Run `make backend-dev` in one terminal. The cached Kokoro model warms before the pairing banner appears; copy the printed token.
+5. Run `make client-web` in another terminal.
+6. Open `https://localhost:8443`, enter the backend address `https://localhost:8444` and pairing token, then grant microphone permission.
 
-If microphone permission was denied, use the browser site controls to restore it and reload. `not_ready` health means the Meta key is missing; key values are never returned. Device speech availability is determined by the browser or Android speech engine.
+If microphone permission was denied, use the browser site controls to restore it and reload. `not_ready` health means the Meta key is missing; key values are never returned. For languages outside Kokoro coverage, fallback voice availability is determined by the browser or Android speech engine.
 
 Stop both terminal processes to end development. Session transcripts and generated audio are cleared when each session ends.
 

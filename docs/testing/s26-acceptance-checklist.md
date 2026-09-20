@@ -19,7 +19,8 @@ Record device, OS and app versions, timing metadata, and pass/fail only. Never r
 - [ ] Audio waits through speech and starts after at least 600 ms of quiet.
 - [ ] Human barge-in stops audio while replay remains available.
 - [ ] Ten generated phrases create no participant, intervention, or feedback loop.
-- [ ] Device speech plays representative Latin, CJK, and Indic learning languages.
+- [ ] Kokoro neural speech is natural and timely for Spanish plus another supported language.
+- [ ] Device fallback plays representative unsupported Latin, CJK, and Indic learning languages.
 - [ ] A missing system voice leaves the card visible and reports recoverable playback failure.
 
 ## Recovery and limits

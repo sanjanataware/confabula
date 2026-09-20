@@ -16,3 +16,5 @@ web-build/
 playwright-report/
 test-results/
 .playwright-cli/
+AGENTS.md
+2026-09-19-conversation-language-coach-mvp.md

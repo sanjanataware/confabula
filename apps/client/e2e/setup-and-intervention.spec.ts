@@ -76,7 +76,7 @@ async function auditMicrophone(page: Page): Promise<void> {
 
 async function fillSetup(page: Page, token = pairingToken): Promise<void> {
   await page.goto('/');
-  await expect(page.getByText('Meta and on-device speech are ready.')).toBeVisible();
+  await expect(page.getByText('Meta and local speech are ready.')).toBeVisible();
   await page.getByTestId('learner-1-language').selectOption('en');
   await page.getByTestId('learning-language').selectOption('es');
   await page.getByTestId('pairing-token').fill(token);

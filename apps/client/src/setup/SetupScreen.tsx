@@ -147,7 +147,7 @@ export function SetupScreen() {
         {loadError ? <Text style={styles.error}>{loadError}</Text> : null}
         {providerMessage ? <Text style={styles.error}>{providerMessage}</Text> : null}
         {health?.status === 'ok' ? (
-          <Text style={styles.ready}>Meta and on-device speech are ready.</Text>
+          <Text style={styles.ready}>Meta and local speech are ready.</Text>
         ) : null}
       </View>
 
@@ -227,8 +227,8 @@ export function SetupScreen() {
         <View style={[styles.checkbox, model.disclosureAccepted && styles.checkboxChecked]} />
         <Text style={styles.disclosureText}>
           I understand that microphone audio and text go to Meta, translated speech
-          is read by this browser or device speech engine, and internet is required
-          for Meta while some system voices may also require a download or network.
+          is generated locally by the backend or a device fallback, and internet is
+          required for Meta while some fallback voices may require a download.
         </Text>
       </Pressable>
 

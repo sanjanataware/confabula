@@ -10,6 +10,6 @@ The production smoke suite verifies:
 - Muse Spark positive and empty intervention outputs plus malformed-output rejection;
 - invalid Meta keys and provider errors remain redacted.
 
-Translation playback uses `expo-speech` and the browser or Android system voice, so it needs no live backend-provider smoke test. Voice availability and quality must be checked on each target device with the S26 acceptance checklist.
+Translation playback uses local Kokoro neural speech for its supported languages and `expo-speech` fallback for the rest, so it needs no live backend-provider smoke test. Run `make speech-setup` to verify model readiness; fallback voice availability and quality must be checked on each target device with the S26 acceptance checklist.
 
 The legacy ElevenLabs adapter remains isolated for future comparison. If credentials and a compatible paid/API voice are available, run `make elevenlabs-smoke`; it is not part of production readiness.

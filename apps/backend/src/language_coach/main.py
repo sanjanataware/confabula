@@ -20,6 +20,8 @@ def create_app(dependencies: AppDependencies | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        if configured.prepare_speech is not None:
+            await configured.prepare_speech()
         registry = SessionRegistry(configured)
         app.state.registry = registry
         if show_banner:

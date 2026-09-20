@@ -2,9 +2,9 @@ export type LanguageCapability = {
   code: string;
   display_name: string;
   muse_bias_name: string;
-  speech_route: {
-    kind: 'device_speech';
-  };
+  speech_route:
+    | { kind: 'device_speech' }
+    | { kind: 'local_neural'; fallback: 'device_speech' };
 };
 
 export type CapabilitiesResponse = {
@@ -69,8 +69,10 @@ export async function loadCapabilities(
     !result.languages.length || !result.languages.every((item: unknown) =>
       isRecord(item) && typeof item.code === 'string' && item.code.length > 0 &&
       typeof item.display_name === 'string' && item.display_name.length > 0 &&
-      typeof item.muse_bias_name === 'string' && isRecord(item.speech_route) &&
-      item.speech_route.kind === 'device_speech',
+      typeof item.muse_bias_name === 'string' && isRecord(item.speech_route) && (
+        item.speech_route.kind === 'device_speech' ||
+        (item.speech_route.kind === 'local_neural' && item.speech_route.fallback === 'device_speech')
+      ),
     )
   ) {
     throw new Error('Backend returned invalid language capabilities.');

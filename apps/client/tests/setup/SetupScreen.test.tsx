@@ -41,7 +41,7 @@ beforeEach(() => {
 
 test('backend languages and a supported locale populate the form; disclosure gates startup', async () => {
   await render(<SetupScreen />);
-  await screen.findByText('Meta and on-device speech are ready.');
+  await screen.findByText('Meta and local speech are ready.');
   expect(screen.getByTestId('learner-1-language').props.selectedValue).toBe('en');
   expect(screen.getByRole('button', { name: 'Start conversation' })).toBeDisabled();
   await fireEvent(screen.getByTestId('learning-language'), 'valueChange', 'es');
@@ -56,7 +56,7 @@ test('backend languages and a supported locale populate the form; disclosure gat
 
 test('same language is shown inline even though the disabled start button cannot be pressed', async () => {
   await render(<SetupScreen />);
-  await screen.findByText('Meta and on-device speech are ready.');
+  await screen.findByText('Meta and local speech are ready.');
   await fireEvent(screen.getByTestId('learning-language'), 'valueChange', 'en');
   expect(screen.getByText('The native and learning languages must be different.')).toBeTruthy();
 });
@@ -64,7 +64,7 @@ test('same language is shown inline even though the disabled start button cannot
 test('unknown device locales are not guessed and two-learner mode can be toggled off', async () => {
   jest.mocked(getLocales).mockReturnValue([{ languageCode: 'unknown' }] as unknown as ReturnType<typeof getLocales>);
   await render(<SetupScreen />);
-  await screen.findByText('Meta and on-device speech are ready.');
+  await screen.findByText('Meta and local speech are ready.');
   expect(screen.getByTestId('learner-1-language').props.selectedValue).toBe('');
   await fireEvent(screen.getByTestId('two-learners'), 'valueChange', true);
   expect(screen.getByTestId('learner-2-language')).toBeTruthy();
@@ -78,7 +78,7 @@ test('backend failure can be retried with an accessible button', async () => {
   await render(<SetupScreen />);
   await screen.findByText(/Could not reach the backend/);
   await fireEvent.press(screen.getByRole('button', { name: 'Check backend' }));
-  await screen.findByText('Meta and on-device speech are ready.');
+  await screen.findByText('Meta and local speech are ready.');
 });
 
 test('missing readiness names the provider rather than a key value', async () => {

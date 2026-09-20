@@ -11,6 +11,10 @@ from language_coach.providers.interfaces import (
     SpeechSynthesizer,
     Transcriber,
 )
+from language_coach.providers.kokoro import (
+    HybridSpeechSynthesizer,
+    KokoroSpeechSynthesizer,
+)
 from language_coach.providers.muse_spark import MuseSparkAnalyzer
 from language_coach.providers.muse_transcribe import MuseTranscriber
 from language_coach.services.audio_assets import InMemoryAudioStore
@@ -26,6 +30,7 @@ class AppDependencies:
     synthesizer: SpeechSynthesizer
     audio_store: InMemoryAudioStore
     clock: Clock
+    prepare_speech: Callable[[], Awaitable[None]] | None = None
     close_providers: Callable[[], Awaitable[None]] | None = None
 
 
@@ -38,6 +43,11 @@ def build_production_dependencies() -> AppDependencies:
         max_retries=0,
     )
 
+    speech = HybridSpeechSynthesizer(
+        KokoroSpeechSynthesizer(),
+        DeviceSpeechSynthesizer(),
+    )
+
     async def close_providers() -> None:
         await spark_client.close()
 
@@ -46,8 +56,9 @@ def build_production_dependencies() -> AppDependencies:
         pairing_token=PairingToken(),
         transcriber=MuseTranscriber(muse_key),
         analyzer=MuseSparkAnalyzer(spark_client),
-        synthesizer=DeviceSpeechSynthesizer(),
+        synthesizer=speech,
         audio_store=InMemoryAudioStore(),
         clock=SystemClock(),
+        prepare_speech=speech.prepare,
         close_providers=close_providers,
     )

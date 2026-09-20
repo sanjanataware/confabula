@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from language_coach.composition import AppDependencies
 from language_coach.config import Settings
 from language_coach.main import create_app
+from language_coach.providers.kokoro import KOKORO_ROUTES
 from language_coach.services.audio_assets import InMemoryAudioStore
 from language_coach.services.pairing import PairingToken
 from tests.fakes.clock import ManualClock
@@ -64,7 +65,9 @@ def test_capabilities_lists_every_supported_language() -> None:
     assert response.status_code == 200
     assert len(response.json()["languages"]) == 25
     assert {item["code"] for item in response.json()["languages"]} >= {"en", "es", "bn"}
+    routes = {item["code"]: item["speech_route"] for item in response.json()["languages"]}
     assert all(
-        item["speech_route"] == {"kind": "device_speech"}
-        for item in response.json()["languages"]
+        routes[code] == {"kind": "local_neural", "fallback": "device_speech"}
+        for code in KOKORO_ROUTES
     )
+    assert routes["bn"] == {"kind": "device_speech"}
