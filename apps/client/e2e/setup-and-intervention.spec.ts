@@ -145,10 +145,17 @@ test('preview, final help, device speech, echo protection, barge-in, replay, and
   expect(playback.filter((event) => event.type === 'playback.started')[1].manual).toBe(true);
   await expect.poll(() => playback.filter((event) => event.type === 'playback.ended').length, { timeout: 10_000 }).toBe(1);
 
+  for (const viewport of [{ width: 768, height: 900 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    await page.waitForTimeout(100);
+    await expect(page.getByTestId(/^intervention-/)).toHaveCount(1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  }
+
   await page.getByRole('button', { name: 'End', exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByTestId('pairing-token')).toHaveValue('');
-  await expect(page.getByText('grocery store')).toHaveCount(0);
+  await expect(page.getByTestId(/^intervention-/)).toHaveCount(0);
   await expect.poll(() => state(request)).toEqual({
     sessions: 0, transcript_turns: 0, interventions: 0, events: 0,
     audio_bytes: 0, speakers: 0, playing: 0, pcm_frames: 0,
@@ -168,6 +175,24 @@ test('preview, final help, device speech, echo protection, barge-in, replay, and
   expect(spoken.every((item) => item.text === 'supermercado')).toBe(true);
   expect(spoken.every((item) => item.language === 'es')).toBe(true);
   expect(pageErrors).toEqual([]);
+});
+
+test('setup remains responsive and keyboard ordered across viewports', async ({ page }) => {
+  for (const viewport of [
+    { width: 1440, height: 1000 },
+    { width: 768, height: 900 },
+    { width: 390, height: 844 },
+    { width: 320, height: 700 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    await expect(page.getByText('Meta and local speech are ready.')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  }
+  await page.getByTestId('backend-address').focus();
+  await page.keyboard.press('Tab');
+  await expect(page.getByTestId('pairing-token')).toBeFocused();
+  await expect(page.getByRole('checkbox', { name: 'Acknowledge provider processing' })).toBeVisible();
 });
 
 test('invalid pairing never activates the browser microphone', async ({ page }) => {

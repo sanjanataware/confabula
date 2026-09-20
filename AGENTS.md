@@ -15,3 +15,9 @@
 Default tests must never call paid providers. `make provider-smoke` is explicitly opt-in and also requires the live variables documented in `docs/testing/provider-smoke-tests.md`.
 
 The repository uses Expo SDK 57 and Python 3.12. Keep `uv.lock` and `package-lock.json` committed. Full transcripts, generated audio, resume credentials, and pairing credentials are in-memory only.
+
+# Interface work
+
+Before inventing visual components, inspect `apps/client/src/design`, existing product components, and approved references. Adapt external patterns to this project’s typography, spacing, color, motion, accessibility, and responsive-layout system instead of assembling unrelated templates.
+
+Complete visual work through an iterative browser loop: implement, run, capture desktop/tablet/mobile screenshots, critique, fix, and capture again. Motion must communicate state or cause-and-effect, honor reduced-motion preferences, and never delay interaction. Preserve native platform behavior, accessible labels, keyboard focus, readable contrast, 44-point touch targets, Dynamic Type tolerance, and the intervention-only/no-transcript product boundary.

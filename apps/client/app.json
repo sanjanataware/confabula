@@ -7,6 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "languagecoach",
     "userInterfaceStyle": "light",
+    "backgroundColor": "#F5F4EF",
     "ios": {
       "icon": "./assets/expo.icon",
       "infoPlist": {
@@ -16,7 +17,7 @@
     "android": {
       "permissions": ["RECORD_AUDIO"],
       "adaptiveIcon": {
-        "backgroundColor": "#F3F0E8",
+        "backgroundColor": "#F5F4EF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -32,7 +33,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#176445",
+          "backgroundColor": "#346B60",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
